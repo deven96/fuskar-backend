@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Fuskar
 
 This is a facial recognition application built to be deployed on an NVIDIA Jetson Nano
@@ -27,7 +28,3 @@ The API was built using django and face_recognition
 ```
 
 ### Frontend
-
-
-
-### 
