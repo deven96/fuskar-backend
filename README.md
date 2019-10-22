@@ -28,7 +28,7 @@ The API was built using django and face_recognition
 
 ### Frontend
 
-The front end was built using nuxtjs, a progressive vuejs framework that supports server side rendering 
+The front end was built using nuxtjs, a progressive vuejs framework that supports server side rendering. Code [here](https://github.com/abdulqudus001/student-attendance)
 
 ## Build Setup
 
