@@ -1,7 +1,8 @@
 from django.shortcuts import render
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import viewsets
 from fuskar.models import Student, Image, Course
-from fuskar.serializers import StudentSerializer, ImageSerializer, CourseSerializer
+from fuskar.serializers import StudentSerializer, ImageSerializer, CourseSerializer, StudentCourseSerializer
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -28,6 +29,7 @@ class StudentViewSet(viewsets.ModelViewSet):
     serializer_class = StudentSerializer
     queryset = Student.objects.all()
     image_serializer = ImageSerializer
+    course_serializer = StudentCourseSerializer
 
     @action(detail=True, methods=['get', 'post'])
     # pylint: disable=invalid-name
@@ -54,5 +56,36 @@ class StudentViewSet(viewsets.ModelViewSet):
             serializer = self.image_serializer(image)
             return Response(serializer.data)
             
-
+    @action(detail=True, methods=['get', 'post'])
+    # pylint: disable=invalid-name
+    def courses(self, request, pk=None):
+        """ Checks a specific student's courses 
+        
+        :param pk: student id
+        :type pk: int
+        """
+        student = Student.objects.get(id=pk)
+        queryset = student.course_set
+        if request.method == "GET":
+            serializer = self.course_serializer(queryset.all(), many=True)
+            return Response(serializer.data)
+        elif request.method == "POST":
+            response = Response()
+            response.status_code =  400
+            try:
+                course_no = int(request.data['course'])
+                course = Course.objects.get(id=course_no)
+                if course not in queryset.all():
+                    queryset.add(course)
+                    serializer = self.course_serializer(course)
+                    return Response(serializer.data)
+                else:
+                    return Response({'detail': 'Student already takes this course'})
+            except KeyError:
+                response['detail'] = "No course_no attached"
+                return response
+            except ObjectDoesNotExist:
+                response['detail'] = "Course Number does not exist"
+                return response
+                
 
