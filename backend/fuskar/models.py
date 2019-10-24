@@ -31,6 +31,7 @@ class Course(models.Model):
     )
     department = models.CharField(max_length=15, choices=DEPT_CHOICES)
     code = models.CharField(max_length=3, blank=False, null=False)
+    name = models.CharField(max_length=256, blank=False, null=False)
     description = models.CharField(max_length=512, blank=True, null=True)
     registered_students = models.ManyToManyField(Student, blank=True)
 

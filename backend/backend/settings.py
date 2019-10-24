@@ -42,10 +42,12 @@ INSTALLED_APPS = [
     'rest_auth',
     'rest_auth.registration',
     'allauth',
+    'corsheaders',
 
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -75,6 +77,11 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
+# allowed origins to make cross site requests
+CORS_ORIGIN_WHITELIST = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000"
+]
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
@@ -133,3 +140,6 @@ STATIC_URL = '/static/'
 
 MEDIA_URL =  '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+CACHE_URL = '/.fuskar-cache/'
+CACHE_ROOT = os.path.join(BASE_DIR, '.fuskar-cache')

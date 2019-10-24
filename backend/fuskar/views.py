@@ -1,7 +1,9 @@
 from django.shortcuts import render
+from django.http import StreamingHttpResponse
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import viewsets
 from fuskar.models import Student, Image, Course
+from fuskar.utils.camera import video_stream
 from fuskar.serializers import StudentSerializer, ImageSerializer, CourseSerializer, StudentCourseSerializer
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -87,5 +89,3 @@ class StudentViewSet(viewsets.ModelViewSet):
             except ObjectDoesNotExist:
                 response['detail'] = "Course Number does not exist"
                 return response
-                
-
