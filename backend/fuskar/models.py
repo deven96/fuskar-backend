@@ -1,6 +1,6 @@
 import os
 from django.db import models
-from django.dispatch import receiver
+
 
 def get_image_path(instance, filename):
     """
@@ -44,8 +44,8 @@ class Lecture(models.Model):
     """
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     started_at = models.DateTimeField(auto_now_add=True)
-    stopped_at = models.DateTimeField()
-    students_present = models.ManyToManyField(Student)
+    stopped_at = models.DateTimeField(blank=True, null=True)
+    students_present = models.ManyToManyField(Student, blank=True)
 
 class Image(models.Model):
     """
@@ -57,13 +57,3 @@ class Image(models.Model):
 
     def __str__(self):
         return self.id
-
-@receiver(models.signals.post_delete, sender=Image)
-def auto_delete_file_on_delete(sender, instance, **kwargs):
-    """
-    Deletes file from filesystem
-    when corresponding `Image` object is deleted.
-    """
-    if instance.file:
-        if os.path.isfile(instance.file.path):
-            os.remove(instance.file.path)

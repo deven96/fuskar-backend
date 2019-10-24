@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from fuskar.models import Image, Student, Course
+from fuskar.models import Image, Student, Course, Lecture
 
 class ImageSerializer(serializers.ModelSerializer):
     class Meta:
@@ -20,3 +20,13 @@ class StudentCourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         exclude = ['registered_students', ]
+
+class CourseLectureSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Lecture
+        exclude = ['course', ]
+
+class LectureSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Lecture
+        fields = "__all__"

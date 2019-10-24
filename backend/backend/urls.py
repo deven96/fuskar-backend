@@ -23,7 +23,9 @@ from rest_framework import routers
 router = routers.DefaultRouter()
 router.register(r'students', views.StudentViewSet)
 router.register(r'images', views.ImageViewSet)
-router.register(r'course', views.CourseViewSet)
+router.register(r'courses', views.CourseViewSet)
+router.register(r'lectures', views.LectureViewSet)
+# router.register(r'video', views.get_stream)
 # router.register(r'contracts', views.ContractViewSet)
 # router.register(r'maintenance_activity', views.MaintenanceActivityViewSet)
 # router.register(r'equipments', views.EquipmentViewSet)
@@ -34,6 +36,7 @@ router.register(r'course', views.CourseViewSet)
 
 
 urlpatterns = [
+    path('video', views.get_stream),
     path('', include(router.urls)),
     path('admin/', admin.site.urls),
 ]
