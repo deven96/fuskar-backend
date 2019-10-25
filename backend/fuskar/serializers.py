@@ -1,10 +1,13 @@
 from rest_framework import serializers
 from fuskar.models import Image, Student, Course, Lecture
+import face_recognition
+
 
 class ImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Image
         fields = "__all__"
+
 
 class StudentSerializer(serializers.ModelSerializer):
     class Meta:

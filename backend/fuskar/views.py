@@ -1,7 +1,8 @@
 from django.shortcuts import render
 from django.http import StreamingHttpResponse
 from django.core.exceptions import ObjectDoesNotExist
-from rest_framework import viewsets
+from django.views.decorators import gzip
+from rest_framework import viewsets, status
 from fuskar.models import Student, Image, Course, Lecture
 from fuskar.utils.camera import video_stream
 from fuskar.serializers import (
@@ -14,7 +15,7 @@ from fuskar.serializers import (
 )
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
-from rest_framework.views import APIView
+import face_recognition
 
 class ImageViewSet(viewsets.ModelViewSet):
     """
@@ -22,6 +23,22 @@ class ImageViewSet(viewsets.ModelViewSet):
     """
     serializer_class = ImageSerializer
     queryset = Image.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        """
+        Override the default create function to check if the image has None
+        or multiple faces
+        """
+        data = request.data.copy()
+        image = data['file']
+        face = face_recognition.load_image_file(image)
+        face_bounding_boxes = face_recognition.face_locations(face)
+        if len(face_bounding_boxes) == 1 :
+            return super().create(request)
+        else:
+            return Response(
+                {'detail': "Image contains none or multiple faces"},
+                status=status.HTTP_406_NOT_ACCEPTABLE)
 
 class CourseViewSet(viewsets.ModelViewSet):
     """
@@ -69,10 +86,9 @@ class StudentViewSet(viewsets.ModelViewSet):
             try:
                 file = request.data['file']
             except KeyError:
-                response = Response()
-                response.status_code =  400
-                response['detail'] = "No Image attached"
-                return response
+                return Response(
+                {'detail': "No image data posted"},
+                status=status.HTTP_406_NOT_ACCEPTABLE)
             owner = Student.objects.get(id=pk)
             image = Image.objects.create(owner=owner, file=file)
             serializer = self.image_serializer(image)
@@ -118,7 +134,7 @@ class LectureViewSet(viewsets.ModelViewSet):
     serializer_class = LectureSerializer
     queryset = Lecture.objects.all()
 
-
+@gzip.gzip_page
 @api_view(['get'])
 def get_stream(request):
     return StreamingHttpResponse(video_stream(), content_type="multipart/x-mixed-replace;boundary=frame")

@@ -37,12 +37,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'fuskar',
     'rest_framework',
     'rest_auth',
     'rest_auth.registration',
     'allauth',
     'corsheaders',
+    'fuskar',
 
 ]
 
@@ -143,3 +143,5 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 CACHE_URL = '/.fuskar-cache/'
 CACHE_ROOT = os.path.join(BASE_DIR, '.fuskar-cache')
+
+USE_EMBEDDING = True
