@@ -1,3 +1,5 @@
+import face_recognition
+from django.utils import timezone
 from django.shortcuts import render
 from django.http import StreamingHttpResponse
 from django.core.exceptions import ObjectDoesNotExist
@@ -5,6 +7,7 @@ from django.views.decorators import gzip
 from rest_framework import viewsets, status
 from fuskar.models import Student, Image, Course, Lecture
 from fuskar.utils.camera import video_stream
+from fuskar.signals import end_attendance
 from fuskar.serializers import (
                         StudentSerializer, 
                         ImageSerializer, 
@@ -15,7 +18,6 @@ from fuskar.serializers import (
 )
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
-import face_recognition
 
 class ImageViewSet(viewsets.ModelViewSet):
     """
@@ -31,6 +33,7 @@ class ImageViewSet(viewsets.ModelViewSet):
         """
         data = request.data.copy()
         image = data['file']
+        print(image)
         face = face_recognition.load_image_file(image)
         face_bounding_boxes = face_recognition.face_locations(face)
         if len(face_bounding_boxes) == 1 :
@@ -133,6 +136,36 @@ class LectureViewSet(viewsets.ModelViewSet):
     """
     serializer_class = LectureSerializer
     queryset = Lecture.objects.all()
+
+
+    @action(detail=True, methods=['post'])
+    def end(self, request, pk=None):
+        """
+        Ends an existing lecture
+        """
+        now = timezone.now()
+        try:
+            lecture_object = Lecture.objects.get(id=pk)
+        except ObjectDoesNotExist:
+            return Response(
+                {'detail': "lecture {} does not exist".format(pk)},
+                status=status.HTTP_406_NOT_ACCEPTABLE)
+        course_name = lecture_object.course.name
+        if lecture_object.stopped_at:
+            return Response(
+                {'detail': "lecture {}/{} has already ended". format(
+                    course_name, pk
+                )},
+                status=status.HTTP_406_NOT_ACCEPTABLE)
+        else:
+            # save time of stoppage as now
+            end_attendance.send(sender=self.__class__)
+            lecture_object.stopped_at = now
+            lecture_object.save()
+            # send signal to end attendance taking
+            serializer = self.get_serializer(lecture_object)
+            return Response(serializer.data)
+
 
 @gzip.gzip_page
 @api_view(['get'])

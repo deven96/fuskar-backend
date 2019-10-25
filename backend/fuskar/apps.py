@@ -6,5 +6,3 @@ class FuskarConfig(AppConfig):
 
     def ready(self):
         import fuskar.signals
-
-        # fuskar.signals.test_attendance()

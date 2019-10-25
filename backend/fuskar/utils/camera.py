@@ -173,10 +173,9 @@ def get_frame():
 
     if video_camera == None:
         video_camera = VideoCamera()
-    while True:
-        frame = video_camera.get_frame(ret_bytes=False, detect_face=False)
-        print("Retrieving frame from camera as a picture [jpeg mode]")
-        yield frame
+    frame = video_camera.get_frame(ret_bytes=False, detect_face=False)
+    print("Retrieving frame from camera as a picture [jpeg mode]")
+    return frame
 
 def stop_cam():
     """

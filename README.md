@@ -10,6 +10,9 @@ It combines the similarity comparison of the FaceNet Model trained on a Siamese 
 The API was built using django and face_recognition
 
 ```bash
+    # install redis
+    sudo apt-get install redis-server
+
     # create virtualenv
     mkvirtualenv fuskar
     # install requirements
@@ -48,3 +51,26 @@ $ yarn generate
 ```
 
 For detailed explanation on how things work, check out [Nuxt.js docs](https://nuxtjs.org).
+
+
+### Deploy Plans
+
+- Auto start `wireless hotspot`
+
+- Allow all incoming traffic on port 80 using ufw
+ 
+- Create nginx sites-available script for redirecting traffic from port 80 to the front-end port
+
+- Back-end (Django) application
+
+    - Create Gunicorn service file
+
+    - Create Redis-server  broker service file
+
+    - Create Celery service file
+
+- Front-end (Vue) application
+
+    - Create Vue service file
+
+    - Connect to back-end port
