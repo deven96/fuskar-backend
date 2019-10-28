@@ -20,23 +20,7 @@ video_camera = None
 global_frame = None
 prototxtfile = os.path.join(cache_path, "cache", "deploy.prototxt")
 caffemodel = os.path.join(cache_path, "cache", "detect.caffemodel")
-tempdir = os.path.join(media_path, "tempdir")
 video_path = os.path.join(media_path, 'video', 'video.avi')
-
-def randomString2(stringLength=8):
-    """Generate a random string of fixed length """
-    letters= string.ascii_lowercase
-    return ''.join(random.sample(letters,stringLength))
-
-def clear_temp():
-    """
-    Clear the tempdir
-    """
-    if os.path.exists(tempdir):
-        for i in os.listdir(tempdir):
-            os.remove(os.path.join(tempdir, i))
-        os.remove(tempdir)
-    print("Deleted temporary images")
 
 class RecordingThread(threading.Thread):
     def __init__(self, name, camera):
@@ -211,15 +195,3 @@ def stop_cam():
 
     if video_camera:
         video_camera.stop_record()
-
-def capture_from_camera(student_id, number=10):
-    """
-    Run the student capture process
-    """
-    global video_camera
-
-    if video_camera == None:
-        video_camera = VideoCamera()
-    print(f"Taking pictures for student {student_id}")
-    video_camera.take_pictures(student_id=student_id, number=number)
-    video_camera.stop_record()
