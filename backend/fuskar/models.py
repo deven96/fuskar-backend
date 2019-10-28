@@ -1,5 +1,7 @@
 import os
 from django.db import models
+from django_celery_beat.models import PeriodicTask, IntervalSchedule
+from django.utils import timezone
 
 
 def get_image_path(instance, filename):
@@ -58,3 +60,60 @@ class Image(models.Model):
     def __str__(self):
         return "Image object : {}".format(self.id)
 
+class TaskScheduler(models.Model):
+
+    periodic_task = models.ForeignKey(PeriodicTask, on_delete=models.CASCADE)
+    lecture = models.ForeignKey(Lecture, default=1, on_delete=models.CASCADE)
+
+
+    @staticmethod
+    def schedule_every(task_name, period, every, lecture, args=None, kwargs=None):
+        """ schedules a task by name every "every" "period". So an example call would be:
+            TaskScheduler.schedule_every('mycustomtask', 'seconds', 30, 1, [1,2,3])
+            that would schedule your custom task to run every 30 seconds with the arguments 1,2 and 3 passed to the actual task. 
+        """
+        permissible_periods = ['days', 'hours', 'minutes', 'seconds']
+        if period not in permissible_periods:
+            raise Exception('Invalid period specified')
+        # create the periodic task and the interval
+        ptask_name = "%s_%s" % (task_name,  timezone.now()) # create some name for the period task
+        interval_schedules = IntervalSchedule.objects.filter(period=period, every=every)
+        lecture = Lecture.objects.get(id=lecture)
+        if interval_schedules: # just check if interval schedules exist like that already and reuse em
+            interval_schedule = interval_schedules[0]
+        else: # create a brand new interval schedule
+            interval_schedule = IntervalSchedule()
+            interval_schedule.every = every # should check to make sure this is a positive int
+            interval_schedule.period = period 
+            interval_schedule.save()
+        ptask = PeriodicTask(name=ptask_name, task=task_name, interval=interval_schedule)
+        if args:
+            ptask.args = args
+        if kwargs:
+            ptask.kwargs = kwargs
+        ptask.save()
+        return TaskScheduler.objects.create(periodic_task=ptask, lecture=lecture)
+
+    def stop(self):
+        """pauses the task"""
+        ptask = self.periodic_task
+        ptask.enabled = False
+        ptask.save()
+        self.save()
+        print("Stopped TaskSchedule")
+
+    def start(self):
+        """starts the task"""
+        ptask = self.periodic_task
+        ptask.enabled = True
+        ptask.save()
+        self.save()
+
+    def terminate(self):
+        print("TaskSchedule terminate called")
+        ptask = self.periodic_task
+        ptask.enabled = False
+        ptask.save()
+        ptask.delete()
+        self.delete()
+        print("Deleted TaskSchedule")

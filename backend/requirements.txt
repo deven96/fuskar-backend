@@ -14,8 +14,10 @@ decorator==4.4.0
 defusedxml==0.6.0
 Django==2.2.6
 django-allauth==0.40.0
+django-celery-beat==1.5.0
 django-cors-headers==3.1.1
 django-rest-auth==0.9.5
+django-timezone-field==3.1
 djangorestframework==3.10.3
 dlib==19.17.0
 face-recognition==1.2.3
@@ -59,6 +61,7 @@ psycopg2-binary==2.8.4
 ptyprocess==0.6.0
 Pygments==2.4.2
 pyparsing==2.4.2
+python-crontab==2.4.0
 python-dateutil==2.8.0
 python3-openid==3.1.0
 pytz==2019.2

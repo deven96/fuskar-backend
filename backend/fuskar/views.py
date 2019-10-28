@@ -2,12 +2,13 @@ import face_recognition
 from django.utils import timezone
 from django.shortcuts import render
 from django.http import StreamingHttpResponse
+from django.http import HttpResponseRedirect
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators import gzip
 from rest_framework import viewsets, status
 from fuskar.models import Student, Image, Course, Lecture
 from fuskar.utils.camera import video_stream
-from fuskar.signals import end_attendance
+from fuskar.signals import end_attendance, capture
 from fuskar.serializers import (
                         StudentSerializer, 
                         ImageSerializer, 
@@ -111,8 +112,6 @@ class StudentViewSet(viewsets.ModelViewSet):
             serializer = self.course_serializer(queryset.all(), many=True)
             return Response(serializer.data)
         elif request.method == "POST":
-            response = Response()
-            response.status_code =  400
             try:
                 course_no = int(request.data['course'])
                 course = Course.objects.get(id=course_no)
@@ -121,13 +120,15 @@ class StudentViewSet(viewsets.ModelViewSet):
                     serializer = self.course_serializer(course)
                     return Response(serializer.data)
                 else:
-                    return Response({'detail': 'Student already takes this course'})
+                    detail = 'Student already takes this course'
             except KeyError:
-                response['detail'] = "No course_no attached"
-                return response
+                detail = "No course_no attached"
             except ObjectDoesNotExist:
-                response['detail'] = "Course Number does not exist"
-                return response
+                detail = "Course Number does not exist"
+                return Response(
+                    {"detail": detail},
+                    status=status.HTTP_406_NOT_ACCEPTABLE
+                )
     
 
 class LectureViewSet(viewsets.ModelViewSet):
@@ -153,13 +154,13 @@ class LectureViewSet(viewsets.ModelViewSet):
         course_name = lecture_object.course.name
         if lecture_object.stopped_at:
             return Response(
-                {'detail': "lecture {}/{} has already ended". format(
+                {'detail': "lecture [{}]-lecture-obj-{} has already ended". format(
                     course_name, pk
                 )},
                 status=status.HTTP_406_NOT_ACCEPTABLE)
         else:
             # save time of stoppage as now
-            end_attendance.send(sender=self.__class__)
+            end_attendance.send(sender=self.__class__, lecture_id=pk)
             lecture_object.stopped_at = now
             lecture_object.save()
             # send signal to end attendance taking

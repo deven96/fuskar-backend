@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'rest_auth.registration',
     'allauth',
     'corsheaders',
+    'django_celery_beat',
     'fuskar',
 
 ]
@@ -157,3 +158,14 @@ CACHE_URL = '/.fuskar-cache/'
 CACHE_ROOT = os.path.join(BASE_DIR, '.fuskar-cache')
 
 USE_EMBEDDING = True
+
+if DEBUG:
+    media_path = MEDIA_ROOT
+    cache_path = CACHE_ROOT
+else:
+    media_path = MEDIA_URL
+    cache_path = CACHE_URL
+
+# save the embedding map in the cache directory
+SVM_EMBEDDING_MAP = os.path.join(cache_path, 'cache', 'embedding-map.pkl')
+ENCODING_LIST = os.path.join(cache_path, 'cache', 'encoding-list.pkl')

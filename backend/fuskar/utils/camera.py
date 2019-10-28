@@ -1,3 +1,5 @@
+import random
+import string
 import os
 import cv2
 import numpy as np
@@ -18,7 +20,23 @@ video_camera = None
 global_frame = None
 prototxtfile = os.path.join(cache_path, "cache", "deploy.prototxt")
 caffemodel = os.path.join(cache_path, "cache", "detect.caffemodel")
+tempdir = os.path.join(media_path, "tempdir")
 video_path = os.path.join(media_path, 'video', 'video.avi')
+
+def randomString2(stringLength=8):
+    """Generate a random string of fixed length """
+    letters= string.ascii_lowercase
+    return ''.join(random.sample(letters,stringLength))
+
+def clear_temp():
+    """
+    Clear the tempdir
+    """
+    if os.path.exists(tempdir):
+        for i in os.listdir(tempdir):
+            os.remove(os.path.join(tempdir, i))
+        os.remove(tempdir)
+    print("Deleted temporary images")
 
 class RecordingThread(threading.Thread):
     def __init__(self, name, camera):
@@ -66,7 +84,7 @@ class VideoCamera(object):
     def __del__(self):
         self.cap.release()
     
-    def detect_face(self, frame):
+    def detect_face(self, frame, confidence=0.3, draw_bounding_box=True):
         """
         Detect a face from a frame and draw bounding box
         """
@@ -82,31 +100,34 @@ class VideoCamera(object):
         self.classifier.setInput(blob)
         detections = self.classifier.forward()
         
+        boxes = list()
         # loop over the detections
         for i in range(0, detections.shape[2]):
             # extract the confidence (i.e., probability) associated with the
             # prediction
-            confidence = detections[0, 0, i, 2]
+            confidence_val = detections[0, 0, i, 2]
             
             # filter out weak detections by ensuring the `confidence` is
             # greater than the minimum confidence
-            if confidence < 0.3:
+            if confidence_val < confidence:
                 continue
             
             # compute the (x, y)-coordinates of the bounding box for the
             # object
             box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
             (startX, startY, endX, endY) = box.astype("int")
+            boxes.append((startX, startY, endX, endY))
             
             # draw the bounding box of the face along with the associated
             # probability
             text = "{:.2f}%".format(confidence * 100)
             y = startY - 10 if startY - 10 > 10 else startY + 10
-            cv2.rectangle(frame, (startX, startY), (endX, endY),
-            (0, 0, 255), 2)
-            cv2.putText(frame, text, (startX, y),
-            cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 2)
-        return frame
+            if draw_bounding_box:
+                cv2.rectangle(frame, (startX, startY), (endX, endY),
+                (0, 0, 255), 2)
+                cv2.putText(frame, text, (startX, y),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 2)
+        return frame, boxes
 
     def get_frame(self, ret_bytes=True, detect_face=True):
         """
@@ -119,19 +140,24 @@ class VideoCamera(object):
         """
         ret, frame = self.cap.read()
         if detect_face:
-            frame = self.detect_face(frame)
+            frame, boxes = self.detect_face(frame)
         if ret:
             ret, jpeg = cv2.imencode('.jpg', frame)
             if ret_bytes:
                 # jpeg = cv2.imread("frame.jpeg")
-                return jpeg.tobytes()
+                return jpeg.tobytes(), boxes
             else:
-                return jpeg
+                return jpeg, boxes
         else:
             print("Could not read from camera")
             return None
+        if not detect_face and frame:
+            return frame
 
     def start_record(self):
+        """
+        Start recording a video
+        """
         self.is_record = True
         self.recordingThread = RecordingThread("Video Recording Thread", self.cap)
         self.recordingThread.start()
@@ -156,7 +182,7 @@ def video_stream():
     # if not, send StreamHTTPResponse formated responses (in bytes)
     print("Retrieving frame from camera as a stream [bytes mode]")
     while True:
-        frame = video_camera.get_frame()
+        frame, _ = video_camera.get_frame()
         if frame != None:
             global_frame = frame
             yield (b'--frame\r\n'
@@ -185,3 +211,15 @@ def stop_cam():
 
     if video_camera:
         video_camera.stop_record()
+
+def capture_from_camera(student_id, number=10):
+    """
+    Run the student capture process
+    """
+    global video_camera
+
+    if video_camera == None:
+        video_camera = VideoCamera()
+    print(f"Taking pictures for student {student_id}")
+    video_camera.take_pictures(student_id=student_id, number=number)
+    video_camera.stop_record()

@@ -4,9 +4,10 @@ import django.dispatch
 from django.db import models
 from django.conf import settings
 from django.dispatch import receiver
-from fuskar.models import Image, Lecture, Course
-from fuskar.tasks import retrain_pkl, test_attendance
-from celery.task.control import revoke, broadcast
+from celery.task.control import revoke
+from fuskar.models import Image, Lecture, Course, TaskScheduler
+from fuskar.utils.camera import capture_from_camera
+from fuskar.tasks import retrain_pkl, test_attendance, capture_pictures
 
 attendance_task_id = None
 
@@ -42,20 +43,16 @@ def take_attendance_on_lecture_create(sender, instance, **kwargs):
     Once a Lecture object is created
     """
     global attendance_task_id
-    attendance_task = test_attendance.delay(instance.id)
-    attendance_task_id = attendance_task.id
+    task = test_attendance.delay(instance.id)
+    attendance_task_id = task.id
 
 
+# TODO: find a way to shutdown the infinite loop of attendance taking upon
+# receiving the end attendance signal
 @receiver(end_attendance)
-def cancel_attendance_on_lecture_end(sender, **kwargs):
+def cancel_attendance_on_lecture_end(sender, lecture_id, **kwargs):
     """
     Cancels the attendance procedure 
     """
     global attendance_task_id
-
-    print("In cancel attendance", attendance_task_id)
-
-    if attendance_task_id:
-        revoke(attendance_task_id, terminate=True, signal='SIGKILL')
-        # broadcast('shutdown', destination=['celery@self_killing'])
-        attendance_task_id = None
+    revoke(attendance_task_id, terminate=True)

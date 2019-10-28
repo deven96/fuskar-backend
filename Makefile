@@ -13,10 +13,11 @@ celery:
 	# start celery message broker a.k.a redis
 	@gnome-terminal -e redis-server
 	# start celery
-	@cd backend && celery -A backend worker -n self_killing --loglevel=INFO
+	# @cd backend && celery -A backend worker --beat --scheduler django_celery_beat.schedulers:DatabaseScheduler --loglevel=info
+	@cd backend && celery -A backend worker --loglevel=info
 
 purge-tasks:
-	@cd backend && celery -A backend purge
+	@cd backend && celery -A backend purge -f
 
 requirements:
 	sudo apt-get install redis-server postgres

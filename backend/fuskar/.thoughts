@@ -1,0 +1,22 @@
+# TODO
+# Create a camera class
+
+camera class should be able to do the following
+
+
+class FaceMask(object):
+
+    init()
+    train(
+        "Should train on the existing images and pickle them"
+    )
+    infer(
+        "Should be able to infer using a given image"
+    )
+
+class Camera(object)
+
+    capture(
+        "Should be able to stream to the front-end and take multiple pictures 
+        during registration and save to a particular endpoint"
+    )
