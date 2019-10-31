@@ -55,22 +55,41 @@ For detailed explanation on how things work, check out [Nuxt.js docs](https://nu
 
 ### Deploy Plans
 
-- Auto start `wireless hotspot`
+- [x] Create endpoints for student registration and management
 
-- Allow all incoming traffic on port 80 using ufw
+- [x] Create endpoints for course registration and management
+
+- [x] Create asynchronous tasks for taking attendance and retraining pickled parameter
+
+- [ ] Debug setup for huey where huey does not run tasks
+
+- [ ] Complete NVIDIA jetson Nano setup to install dlib with gpu capabilities
+
+- [ ] Auto start `wireless hotspot`
+
+- [ ] Allow all incoming traffic on port 80 using ufw
  
-- Create nginx sites-available script for redirecting traffic from port 80 to the front-end port
+- [ ] Create nginx sites-available script for redirecting traffic from port 80 to the front-end port
 
 - Back-end (Django) application
 
-    - Create Gunicorn service file
+    - [ ] Auto Switch camera to read from jetson nano streamer
 
-    - Create Redis-server  broker service file
+    - [ ] Create Gunicorn service file
 
-    - Create Celery service file
+    - [ ] Create Redis-server  broker service file
+
+    - [ ] Create Celery service file
+
+    - [ ] Make sure to start django server before Huey server
+
+    - [ ] Tie Huey service restart to restart Celery service
 
 - Front-end (Vue) application
 
-    - Create Vue service file
+    - [ ] Create Vue service file
 
-    - Connect to back-end port
+    - [ ] Connect to back-end port
+
+    - [ ] Create Vue server service file to run on start, depending on django service file
+

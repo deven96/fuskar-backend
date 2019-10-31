@@ -26,9 +26,9 @@ class StudentCourseSerializer(serializers.ModelSerializer):
 class CourseLectureSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lecture
-        exclude = ['course', ]
+        exclude = ['course', 'lock']
 
 class LectureSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lecture
-        fields = "__all__"
+        exclude = ['lock', ]

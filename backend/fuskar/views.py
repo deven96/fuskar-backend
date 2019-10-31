@@ -35,8 +35,8 @@ class ImageViewSet(viewsets.ModelViewSet):
         image = data['file']
         face = face_recognition.load_image_file(image)
         face_bounding_boxes = face_recognition.face_locations(face, model='cnn')
-        print(face_bounding_boxes)
         if len(face_bounding_boxes) == 1 :
+            print("Image accepted as image contained only one face")
             return super().create(request)
         else:
             return Response(
@@ -161,6 +161,7 @@ class LectureViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_406_NOT_ACCEPTABLE)
         else:
             # save time of stoppage as now
+            lecture_object.lock = True
             lecture_object.stopped_at = now
             lecture_object.save()
             # send signal to end attendance taking

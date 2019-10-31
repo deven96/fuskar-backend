@@ -22,11 +22,12 @@ def get_boxes(frame):
     return frame, face_recognition.face_locations(rgb_frame, model='cnn')
 
 @task()
+@lock_task('retrain-pkl')
 def retrain_pkl():
     """
     Background task for retraining the pickled objects
     """
-    print("Triggered retraing embedding caches")
+    print("Triggered retraining embedding caches")
     encodings = []
     id_ = []
 
@@ -58,7 +59,7 @@ def retrain_pkl():
     if len(train_dir) > 1:
         # Create and train the SVC classifier
         settings.USE_EMBEDDING = True
-        clf = svm.SVC(gamma='scale')
+        clf = svm.SVC(gamma='scale', probability=True)
         clf.fit(encodings, id_)
         with open(settings.SVM_EMBEDDING_MAP, 'wb') as output:
             print("Creating embedding map")
@@ -71,13 +72,18 @@ def retrain_pkl():
         pickle.dump(encoding_list_tuple, output)
         print("Done creating encoding map at {}".format(settings.ENCODING_LIST))
 
-
+@task()
 def test_attendance(lecture_instance_id):
     """
     Begins taking attendance
     Once a Lecture object is created
     """
-    if not Lecture.objects.get(id=lecture_instance_id).stopped_at:
+    print("##############################################################################")
+    lecture_instance = Lecture.objects.get(id=lecture_instance_id)
+    lecture_processing_time_start = time.time()
+    frame_index = 0
+    while not Lecture.objects.get(id=lecture_instance_id).stopped_at:
+        loop_processing_time_start = time.time()
         lecture_instance = Lecture.objects.get(id=lecture_instance_id)
         course = lecture_instance.course
         students = course.registered_students.all()
@@ -103,11 +109,11 @@ def test_attendance(lecture_instance_id):
         # while True:
         frame = get_frame()
         frame, boxes = get_boxes(frame)
-        print("Frame obtained from stream {}".format(frame))
+        print(f"Frame [{frame_index}] obtained from stream")
         # Find all the faces in the test image using the default HOG-based model
         # face_locations = face_recognition.face_locations(frame, number_of_times_to_upsample=3)
         no = len(boxes)
-        print("Number of faces detected: {}".format(no))
+        print(f"Frame [{frame_index}]: {no} faces detected")
         
         # Get the embeddings of every face in the image
         embedding_list = [x for x in face_recognition.face_encodings(frame, known_face_locations=boxes)]
@@ -119,15 +125,15 @@ def test_attendance(lecture_instance_id):
             if len(embedding_list) > 0:
                 # predictions = list(clf.predict(embedding_list))
                 probability = list(clf.predict_proba(embedding_list))
-                print(probability)
                 for i in probability:
                     highest_probability =  max(i)
                     if highest_probability > settings.CONFIDENCE:
-                        index = probability.index(highest_probability)
+                        index = list(i).index(highest_probability)
                         prediction = classes[index]
                         prediction_set.add(prediction)
-                # prediction_set = set(predictions)
-                _id.union(prediction_set)
+                    else:
+                        print(f"Highest prob {round(highest_probability, 2)} is lower/equal confidence value {settings.CONFIDENCE}")
+                _id = _id.union(prediction_set)
         else:
             # Prediction using ENCODING_MODE
             encoding_list = get_encodings(encoding_list_tuple)
@@ -138,13 +144,26 @@ def test_attendance(lecture_instance_id):
                     if index:
                         encoding = encoding_list[index]
                         single_id = get_id_from_enc(encoding_list_tuple, encoding)
-                        _id.add(single_id)
+                        highest_probability = face_recognition.compare_faces(encoding, i)
+                        if highest_probability > settings.CONFIDENCE:
+                            _id.add(single_id)
+                        else:
+                            print(f"Highest prob {round(highest_probability, 4)} is lower/equal confidence value {settings.CONFIDENCE}")
         for i in _id:
             if int(i) in registered_student_ids:
-                lecture_instance.students_present.add(int(i))
+                # check lecture lock incase processing was occuring when lecture was stopped so as not to add 
+                # student after stopped_at
+                if not Lecture.objects.get(id=lecture_instance_id).lock:
+                    lecture_instance.students_present.add(int(i))
+                    print(f"Marking student with id {int(i)} as present for Lecture {lecture_instance.course.name}-{lecture_instance_id}")
             else:
-                print("Student {} was recognized but was not registered for the course". format(i))
+                print(f"Student {i} was recognized but was not registered for the course")
 
-        print("Id's discovered in this iteration {}".format(_id))
-        time.sleep(30)
-    print("Lecture {}-{} was stopped, exiting attendance".format(lecture_instance.course.name, lecture_instance.id))
+        frame_index = frame_index + 1
+        print(f"Id's discovered in this iteration {_id}")
+        time.sleep(10)
+        print(f"Single frame processing ran in {round(time.time() - loop_processing_time_start, 1)} seconds")
+    stop_lecture_time = time.time()
+    print(f"Lecture {lecture_instance.course.name}-{lecture_instance.id} was stopped, exiting attendance, {frame_index} frame(s) processed")
+    print(f"Lecture {lecture_instance.course.name}-{lecture_instance.id} attendance taking process ran for {round(stop_lecture_time - lecture_processing_time_start, 1)}")
+    print("##############################################################################")

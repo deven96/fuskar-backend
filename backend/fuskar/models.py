@@ -47,6 +47,7 @@ class Lecture(models.Model):
     started_at = models.DateTimeField(auto_now_add=True)
     stopped_at = models.DateTimeField(blank=True, null=True)
     students_present = models.ManyToManyField(Student, blank=True)
+    lock = models.BooleanField(default=False)
 
 class Image(models.Model):
     """

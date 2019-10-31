@@ -20,7 +20,8 @@ def auto_delete_file_on_delete(sender, instance, **kwargs):
     if instance.file:
         if os.path.isfile(instance.file.path):
             os.remove(instance.file.path)
-
+    # retrain pkl to remove image from svm map and serial encodings
+    retrain_pkl()
 
 @receiver(models.signals.post_save, sender=Image)
 def retrain_embedding_on_image_save(sender, instance, **kwargs):
@@ -39,8 +40,8 @@ def take_attendance_on_lecture_create(sender, instance, **kwargs):
     Begins taking attendance
     Once a Lecture object is created
     """
-    task = threading.Thread(target=test_attendance, args=[instance.id])
-    task.daemon = True
-    task.start()
-    # test_attendance(instance.id)
+    # task = threading.Thread(target=test_attendance, args=[instance.id])
+    # task.daemon = True
+    # task.start()
+    test_attendance(instance.id)
 
