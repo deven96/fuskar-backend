@@ -1,6 +1,14 @@
+ngrok: ngrok-server localhost
+
 dev:
 	@python backend/manage.py migrate
 	@python backend/manage.py runserver 192.168.122.1:8000
+
+localhost:
+	@python backend/manage.py runserver
+
+ngrok-server:
+	@ngrok http 8000
 
 shell:
 	@python backend/manage.py shell

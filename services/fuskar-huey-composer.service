@@ -1,0 +1,13 @@
+[Unit]
+Description=Huey Instance for Fuskar
+After=network.target
+
+[Service]
+User=fuskar-owner
+Group=www-data
+WorkingDirectory=/home/fuskar-owner/Projects/fuskar/backend
+Environment="PATH=/home/fuskar-owner/envs/fuskar/bin"
+ExecStart=/home/fuskar-owner/envs/fuskar/bin/python manage.py run_huey
+
+[Install]
+WantedBy=multi-user.target

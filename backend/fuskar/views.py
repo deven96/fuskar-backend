@@ -8,6 +8,7 @@ from django.views.decorators import gzip
 from rest_framework import viewsets, status
 from fuskar.models import Student, Image, Course, Lecture
 from fuskar.utils.camera import video_stream
+from fuskar.utils.helpers import get_hash
 from fuskar.serializers import (
                         StudentSerializer, 
                         ImageSerializer, 
@@ -31,13 +32,18 @@ class ImageViewSet(viewsets.ModelViewSet):
         Override the default create function to check if the image has None
         or multiple faces
         """
+        hashvals = list()
+        for i in Image.objects.all():
+            hashvals.append(i.hashval)
         data = request.data.copy()
         image = data['file']
         face = face_recognition.load_image_file(image)
         face_bounding_boxes = face_recognition.face_locations(face, model='cnn')
         if len(face_bounding_boxes) == 1 :
-            print("Image accepted as image contained only one face")
-            return super().create(request)
+            print("Image accepted as image contained only one face, checking uniqueness")
+            # check image uniqueness
+            request._full_data['hashval'] = get_hash(image.read())
+            return super(ImageViewSet, self).create(request)
         else:
             return Response(
                 {'detail': "Image contains none or multiple faces"},

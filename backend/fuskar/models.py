@@ -1,4 +1,6 @@
 import os
+import hashlib
+from PIL import Image as Im
 from django.db import models
 from django.utils import timezone
 
@@ -56,6 +58,7 @@ class Image(models.Model):
     owner = models.ForeignKey(Student, on_delete=models.CASCADE)
     file = models.ImageField(blank=False, null=False, upload_to=get_image_path)
     uploaded_at = models.DateTimeField(auto_now_add=True)
+    hashval = models.CharField(max_length=255, unique=True, error_messages={'unique':"Image is an exact duplicate of an existing imagw"})
 
     def __str__(self):
         return "Image object : {}".format(self.id)

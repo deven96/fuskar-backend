@@ -7,7 +7,7 @@ from huey.contrib.djhuey import periodic_task, task, lock_task, enqueue
 from django.conf import settings
 from fuskar.models import Lecture
 from fuskar.utils.camera import get_frame
-from fuskar.utils.helpers import get_id_from_enc, get_encodings, get_true_index
+from fuskar.utils.helpers import get_id_from_enc, get_encodings
 import face_recognition
 from sklearn import svm
 
@@ -53,7 +53,7 @@ def retrain_pkl():
                 encodings.append(face_enc)
                 id_.append(person)
                 # create list of encodings tuples
-                encoding_list_tuple.append((face_enc, id_))
+                encoding_list_tuple.append((list(face_enc), person))
             except IndexError:
                 pass
     if len(train_dir) > 1:
@@ -64,14 +64,17 @@ def retrain_pkl():
         with open(settings.SVM_EMBEDDING_MAP, 'wb') as output:
             print("Creating embedding map")
             pickle.dump(clf, output)
+            print(f"Done creating embedding map at {settings.SVM_EMBEDDING_MAP}")
     else:
         print("Cannot create SVM with one class, switching to encoding mode")
         settings.USE_EMBEDDING = False
     with open(settings.ENCODING_LIST, 'wb') as output:
-        print("Creating encoding map")
+        print("Creating encoding list")
         pickle.dump(encoding_list_tuple, output)
-        print("Done creating encoding map at {}".format(settings.ENCODING_LIST))
+        print(f"Done creating encoding list at {settings.ENCODING_LIST}")
 
+# TODO: switch to batch_face_locations to process video stream at once for 
+# quicker processing using nvidia speed up
 @task()
 def test_attendance(lecture_instance_id):
     """
@@ -82,6 +85,21 @@ def test_attendance(lecture_instance_id):
     lecture_instance = Lecture.objects.get(id=lecture_instance_id)
     lecture_processing_time_start = time.time()
     frame_index = 0
+
+    # retrieve classifier from the pickled embedding map
+    if os.path.isfile(settings.SVM_EMBEDDING_MAP):
+        with open(settings.SVM_EMBEDDING_MAP, 'rb') as stream:
+            print("Loading Embedding Map for SVM-EMBEDDING mode")
+            clf = pickle.load(stream)
+            classes = clf.classes_
+    else:
+        print("Embedding Map cannot be found, Switching to FACE-ENCODING mode")
+        settings.USE_EMBEDDING = False
+    if not settings.USE_EMBEDDING:
+        with open(settings.ENCODING_LIST, 'rb') as stream:
+            print("Loading Encoding list for FACE-ENCODING mode")
+            encoding_list_tuple = pickle.load(stream)
+
     while not Lecture.objects.get(id=lecture_instance_id).stopped_at:
         loop_processing_time_start = time.time()
         lecture_instance = Lecture.objects.get(id=lecture_instance_id)
@@ -89,20 +107,6 @@ def test_attendance(lecture_instance_id):
         students = course.registered_students.all()
         print("Retrieving students ID")
         registered_student_ids = [int(student.id) for student in students]
-
-        # retrieve classifier from the pickled embedding map
-        if os.path.isfile(settings.SVM_EMBEDDING_MAP):
-            with open(settings.SVM_EMBEDDING_MAP, 'rb') as stream:
-                print("Loading Embedding Map for SVM-EMBEDDING mode")
-                clf = pickle.load(stream)
-                classes = clf.classes_
-        else:
-            print("Embedding Map cannot be found, Switching to FACE-ENCODING mode")
-            settings.USE_EMBEDDING = False
-        if not settings.USE_EMBEDDING:
-            with open(settings.ENCODING_MAP, 'rb') as stream:
-                print("Loading Encoding list for FACE-ENCODING mode")
-                encoding_list_tuple = pickle.load(stream)
 
         # video_stream is yielding all the images one by one
         _id = set({})
@@ -139,12 +143,14 @@ def test_attendance(lecture_instance_id):
             encoding_list = get_encodings(encoding_list_tuple)
             if len(embedding_list) > 0:
                 for i in embedding_list:
-                    results = face_recognition.compare_faces(encoding_list, i)
-                    index = get_true_index(results)
+                    results = face_recognition.face_distance(encoding_list, i)
+                    # get minimum face distance and compare
+                    min_distance = min(results)
+                    index = list(results).index(min_distance)
                     if index:
                         encoding = encoding_list[index]
                         single_id = get_id_from_enc(encoding_list_tuple, encoding)
-                        highest_probability = face_recognition.compare_faces(encoding, i)
+                        highest_probability = 1 - min_distance
                         if highest_probability > settings.CONFIDENCE:
                             _id.add(single_id)
                         else:
