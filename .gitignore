@@ -136,6 +136,9 @@ tags
 *.retry
 local_vars.yml
 
+# redis junk
+*.rdb
+
 # fuskar cache directories
 .fuskar-cache/
 media/

@@ -1,6 +1,6 @@
 dev:
 	@python backend/manage.py migrate
-	@python backend/manage.py runserver
+	@python backend/manage.py runserver 192.168.122.1:8000
 
 shell:
 	@python backend/manage.py shell
@@ -9,18 +9,18 @@ reset-postgres:
 	@sudo su postgres -c "psql -c \"DROP DATABASE fuskardb;\""
 	@sudo su postgres -c "psql -c \"CREATE DATABASE fuskardb with owner fuskar;\"" && echo "FUSKAR >>> cleared database and created new"
 
-celery:
-	# start celery message broker a.k.a redis
+consumer:
+	# start message broker a.k.a redis
 	@gnome-terminal -e redis-server
-	# start celery
 	# @cd backend && celery -A backend worker --beat --scheduler django_celery_beat.schedulers:DatabaseScheduler --loglevel=info
-	@cd backend && celery -A backend worker --loglevel=info
+	# start huey
+	@cd backend && ./manage.py run_huey
 
 purge-tasks:
 	@cd backend && celery -A backend purge -f
 
 requirements:
-	sudo apt-get install redis-server postgres
+	sudo apt-get install redis-server postgres	
 	# create postgres database
 	@echo "FUSKAR >>> Setting up postgres db" 
 	@sudo su postgres -c "psql -c \"CREATE ROLE fuskar with password 'fuskar';\""

@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'rest_auth.registration',
     'allauth',
     'corsheaders',
-    'django_celery_beat',
+    'huey.contrib.djhuey',
     'fuskar',
 
 ]
@@ -79,10 +79,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'backend.wsgi.application'
 
 # allowed origins to make cross site requests
-CORS_ORIGIN_WHITELIST = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000"
-]
+CORS_ORIGIN_ALLOW_ALL = True
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
@@ -160,12 +157,15 @@ CACHE_ROOT = os.path.join(BASE_DIR, '.fuskar-cache')
 USE_EMBEDDING = True
 
 if DEBUG:
-    media_path = MEDIA_ROOT
-    cache_path = CACHE_ROOT
+    MEDIA_PATH = MEDIA_ROOT
+    CACHE_PATH = CACHE_ROOT
 else:
-    media_path = MEDIA_URL
-    cache_path = CACHE_URL
+    MEDIA_PATH = MEDIA_URL
+    CACHE_PATH = CACHE_URL
 
-# save the embedding map in the cache directory
-SVM_EMBEDDING_MAP = os.path.join(cache_path, 'cache', 'embedding-map.pkl')
-ENCODING_LIST = os.path.join(cache_path, 'cache', 'encoding-list.pkl')
+## AI global variables
+SVM_EMBEDDING_MAP = os.path.join(CACHE_PATH, 'cache', 'embedding-map.pkl')
+ENCODING_LIST = os.path.join(CACHE_PATH, 'cache', 'encoding-list.pkl')
+
+TRAIN_DIR = os.path.join(MEDIA_PATH, 'images')
+CONFIDENCE = 0.3

@@ -68,7 +68,7 @@ class VideoCamera(object):
     def __del__(self):
         self.cap.release()
     
-    def detect_face(self, frame, confidence=0.3, draw_bounding_box=True):
+    def detect_face(self, frame, draw_bounding_box=True):
         """
         Detect a face from a frame and draw bounding box
         """
@@ -93,6 +93,7 @@ class VideoCamera(object):
             
             # filter out weak detections by ensuring the `confidence` is
             # greater than the minimum confidence
+            confidence = settings.CONFIDENCE
             if confidence_val < confidence:
                 continue
             
@@ -104,7 +105,7 @@ class VideoCamera(object):
             
             # draw the bounding box of the face along with the associated
             # probability
-            text = "{:.2f}%".format(confidence * 100)
+            text = "{:.2f}%".format(confidence_val * 100)
             y = startY - 10 if startY - 10 > 10 else startY + 10
             if draw_bounding_box:
                 cv2.rectangle(frame, (startX, startY), (endX, endY),
@@ -122,20 +123,17 @@ class VideoCamera(object):
         :param detect_face: draw bounding boxes on frame (default: True)
         :type detect_face: bool
         """
+        print(f"Retrieving Frame with ret_bytes={ret_bytes} and detect_face={detect_face}")
         ret, frame = self.cap.read()
-        if detect_face:
+        if detect_face and ret:
             frame, boxes = self.detect_face(frame)
-        if ret:
             ret, jpeg = cv2.imencode('.jpg', frame)
             if ret_bytes:
                 # jpeg = cv2.imread("frame.jpeg")
                 return jpeg.tobytes(), boxes
             else:
                 return jpeg, boxes
-        else:
-            print("Could not read from camera")
-            return None
-        if not detect_face and frame:
+        if not detect_face and frame.any():
             return frame
 
     def start_record(self):
@@ -170,9 +168,11 @@ def video_stream():
         if frame != None:
             global_frame = frame
             yield (b'--frame\r\n'
+                    b'Access-Control-Allow-Origin: *\r\n'
                     b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
         else:
             yield (b'--frame\r\n'
+                    b'Access-Control-Allow-Origin: *\r\n'
                     b'Content-Type: image/jpeg\r\n\r\n' + global_frame + b'\r\n\r\n')
 
 def get_frame():

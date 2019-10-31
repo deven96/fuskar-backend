@@ -8,7 +8,6 @@ from django.views.decorators import gzip
 from rest_framework import viewsets, status
 from fuskar.models import Student, Image, Course, Lecture
 from fuskar.utils.camera import video_stream
-from fuskar.signals import end_attendance, capture
 from fuskar.serializers import (
                         StudentSerializer, 
                         ImageSerializer, 
@@ -34,9 +33,9 @@ class ImageViewSet(viewsets.ModelViewSet):
         """
         data = request.data.copy()
         image = data['file']
-        print(image)
         face = face_recognition.load_image_file(image)
-        face_bounding_boxes = face_recognition.face_locations(face)
+        face_bounding_boxes = face_recognition.face_locations(face, model='cnn')
+        print(face_bounding_boxes)
         if len(face_bounding_boxes) == 1 :
             return super().create(request)
         else:
@@ -62,6 +61,8 @@ class CourseViewSet(viewsets.ModelViewSet):
         queryset = course.lecture_set
         serializer = self.lecture_serializer(queryset.all(), many=True)
         return Response(serializer.data)
+
+
 
 class StudentViewSet(viewsets.ModelViewSet):
     """
@@ -160,7 +161,6 @@ class LectureViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_406_NOT_ACCEPTABLE)
         else:
             # save time of stoppage as now
-            end_attendance.send(sender=self.__class__, lecture_id=pk)
             lecture_object.stopped_at = now
             lecture_object.save()
             # send signal to end attendance taking
@@ -171,4 +171,5 @@ class LectureViewSet(viewsets.ModelViewSet):
 @gzip.gzip_page
 @api_view(['get'])
 def get_stream(request):
-    return StreamingHttpResponse(video_stream(), content_type="multipart/x-mixed-replace;boundary=frame")
+    response = StreamingHttpResponse(video_stream(), content_type="multipart/x-mixed-replace;boundary=frame")
+    return response
