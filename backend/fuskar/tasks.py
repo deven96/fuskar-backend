@@ -127,7 +127,6 @@ def test_attendance(lecture_instance_id):
             # Predict all the faces in the test image using the trained classifier
             prediction_set = set({})
             if len(embedding_list) > 0:
-                # predictions = list(clf.predict(embedding_list))
                 probability = list(clf.predict_proba(embedding_list))
                 for i in probability:
                     highest_probability =  max(i)
@@ -167,8 +166,8 @@ def test_attendance(lecture_instance_id):
 
         frame_index = frame_index + 1
         print(f"Id's discovered in this iteration {_id}")
-        time.sleep(10)
         print(f"Single frame processing ran in {round(time.time() - loop_processing_time_start, 1)} seconds")
+        time.sleep(5)
     stop_lecture_time = time.time()
     print(f"Lecture {lecture_instance.course.name}-{lecture_instance.id} was stopped, exiting attendance, {frame_index} frame(s) processed")
     print(f"Lecture {lecture_instance.course.name}-{lecture_instance.id} attendance taking process ran for {round(stop_lecture_time - lecture_processing_time_start, 1)}")

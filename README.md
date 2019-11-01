@@ -91,5 +91,7 @@ For detailed explanation on how things work, check out [Nuxt.js docs](https://nu
 
     - [ ] Connect to back-end port
 
+    - [ ] Crop whitespace out of captured image
+
     - [ ] Create Vue server service file to run on start, depending on django service file
 

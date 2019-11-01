@@ -19,6 +19,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from fuskar import views
 from rest_framework import routers
+from rest_framework.documentation import include_docs_urls
 
 router = routers.DefaultRouter()
 router.register(r'students', views.StudentViewSet)
@@ -39,6 +40,7 @@ urlpatterns = [
     path('video', views.get_stream),
     path('', include(router.urls)),
     path('admin/', admin.site.urls),
+    path('docs/', include_docs_urls(title='AssetMon API', authentication_classes=[], permission_classes=[]))
 ]
 
 if settings.DEBUG:

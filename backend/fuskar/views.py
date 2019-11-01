@@ -73,8 +73,6 @@ class CourseViewSet(viewsets.ModelViewSet):
 class StudentViewSet(viewsets.ModelViewSet):
     """
     Viewset for handling student queries
-
-    /student/student-id/images/ is used to add/remove an image for a student only
     """
     serializer_class = StudentSerializer
     queryset = Student.objects.all()
@@ -85,9 +83,6 @@ class StudentViewSet(viewsets.ModelViewSet):
     # pylint: disable=invalid-name
     def images(self, request, pk=None):
         """ Checks a specific student's images 
-        
-        :param pk: student id
-        :type pk: int
         """
         if request.method == "GET":
             queryset = Image.objects.filter(owner=pk)
@@ -109,9 +104,6 @@ class StudentViewSet(viewsets.ModelViewSet):
     # pylint: disable=invalid-name
     def courses(self, request, pk=None):
         """ Checks a specific student's courses 
-        
-        :param pk: student id
-        :type pk: int
         """
         student = Student.objects.get(id=pk)
         queryset = student.course_set
