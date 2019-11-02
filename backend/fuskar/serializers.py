@@ -5,7 +5,7 @@ from fuskar.models import Image, Student, Course, Lecture
 class ImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Image
-        fields = "__all__"
+        exclude = ['hashval',]
 
 
 class StudentSerializer(serializers.ModelSerializer):

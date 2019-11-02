@@ -26,14 +26,6 @@ router.register(r'students', views.StudentViewSet)
 router.register(r'images', views.ImageViewSet)
 router.register(r'courses', views.CourseViewSet)
 router.register(r'lectures', views.LectureViewSet)
-# router.register(r'video', views.get_stream)
-# router.register(r'contracts', views.ContractViewSet)
-# router.register(r'maintenance_activity', views.MaintenanceActivityViewSet)
-# router.register(r'equipments', views.EquipmentViewSet)
-# router.register(r'equipment_types', views.EquipmentTypeViewSet)
-# router.register(r'employees/location_history', views.LocationHistoryViewSet)
-# router.register(r'employees', views.EmployeeViewSet)
-# router.register(r'designations', views.DesignationViewSet)
 
 
 urlpatterns = [

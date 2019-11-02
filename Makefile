@@ -18,11 +18,8 @@ reset-postgres:
 	@sudo su postgres -c "psql -c \"CREATE DATABASE fuskardb with owner fuskar;\"" && echo "FUSKAR >>> cleared database and created new"
 
 consumer:
-	# start message broker a.k.a redis
 	@gnome-terminal -e redis-server
-	# @cd backend && celery -A backend worker --beat --scheduler django_celery_beat.schedulers:DatabaseScheduler --loglevel=info
-	# start huey
-	@cd backend && ./manage.py run_huey
+	@cd backend && ./manage.py run_huey --flush-locks
 
 purge-tasks:
 	@cd backend && celery -A backend purge -f

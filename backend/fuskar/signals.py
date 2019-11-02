@@ -5,10 +5,12 @@ import django.dispatch
 from django.db import models
 from django.conf import settings
 from django.dispatch import receiver
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+from backend.consumers import LectureConsumer
+from fuskar.serializers import LectureSerializer
 from fuskar.models import Image, Lecture, Course
 from fuskar.tasks import retrain_pkl, test_attendance
-
-attendance_task = None
 
 @receiver(models.signals.post_delete, sender=Image)
 def auto_delete_file_on_delete(sender, instance, **kwargs):
@@ -40,8 +42,22 @@ def take_attendance_on_lecture_create(sender, instance, **kwargs):
     Begins taking attendance
     Once a Lecture object is created
     """
-    # task = threading.Thread(target=test_attendance, args=[instance.id])
-    # task.daemon = True
-    # task.start()
     test_attendance(instance.id)
 
+
+@receiver(models.signals.post_save, sender=Lecture)
+def trigger_ws_serialization(sender, instance, **kwargs):
+    """
+    Triggers sending of a lecture object to a websocket
+    Also closes ws connection if lecture is stopped
+    """
+    print(instance.students_present)
+    serializer = LectureSerializer(instance)
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        f'lectures_update_group_{instance.id}',
+        {
+            'type': 'trigger',
+            'message': serializer.data,
+        }
+    )

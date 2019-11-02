@@ -7,7 +7,7 @@ User=fuskar-owner
 Group=www-data
 WorkingDirectory=/home/fuskar-owner/Projects/fuskar/backend
 Environment="PATH=/home/fuskar-owner/envs/fuskar/bin"
-ExecStart=/home/fuskar-owner/envs/fuskar/bin/gunicorn --workers 3 --bind :9000 -m 007 wsgi
+ExecStart=/home/fuskar-owner/envs/fuskar/bin/daphne -b 0.0.0.0 -p 8000 backend.routing:application
 
 [Install]
 WantedBy=multi-user.target

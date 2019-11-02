@@ -153,9 +153,7 @@ class LectureViewSet(viewsets.ModelViewSet):
         course_name = lecture_object.course.name
         if lecture_object.stopped_at:
             return Response(
-                {'detail': "lecture [{}]-lecture-obj-{} has already ended". format(
-                    course_name, pk
-                )},
+                {'detail': f"lecture [{course_name}]-{pk} has already ended"},
                 status=status.HTTP_406_NOT_ACCEPTABLE)
         else:
             # save time of stoppage as now
@@ -170,5 +168,8 @@ class LectureViewSet(viewsets.ModelViewSet):
 @gzip.gzip_page
 @api_view(['get'])
 def get_stream(request):
+    """
+    Stream the video coming from connected camera
+    """
     response = StreamingHttpResponse(video_stream(), content_type="multipart/x-mixed-replace;boundary=frame")
     return response
