@@ -1,37 +1,54 @@
 import numpy as np
 import os
-import hashlib
-# import matplotlib.pyplot as plt
-# import cv2
-# from sklearn.decomposition import PCA
-# from mpl_toolkits.mplot3d import Axes3D
-# from mpl_toolkits.mplot3d import proj3d
-# from imageio import imread
-# from skimage.transform import resize
-# from scipy.spatial import distance
-# from keras.models import load_model
+import tkinter
+import pickle
+import matplotlib
+import matplotlib.pyplot as plt
+from fuskar.models import Student
+from scipy.spatial import distance
+from sklearn.decomposition import PCA
+from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d import proj3d
+matplotlib.use('TkAgg')
 
+def generate_pca_plot(save_fig_path, encoding_list_path):
+    """
+    Generate 3D PCA plot of the embeddings
+    """
+    X = list()
+    with open(encoding_list_path, 'rb') as stream:
+        encoding_list_tuple = pickle.load(stream)
+    label_set = set({})
+    for i in encoding_list_tuple:
+        X.append(i[0])
+        label_set.add(i[1])
+    pca = PCA(n_components=3).fit(X)
+    label_set_dict = dict()
+    for i in label_set:
+        label_set_dict[i] = []
+    for i in encoding_list_tuple:
+        label_set_dict[i[1]].append(i[0])
+    
+    label_set_transformed = dict()
+    for i in label_set_dict:
+        label_set_transformed[i] = pca.transform(label_set_dict[i])
+    
+    fig = plt.figure(figsize=(8,8))
+    ax = fig.add_subplot(111, projection='3d')
+    plt.rcParams['legend.fontsize'] = 10
+    for i in label_set_transformed.keys():
+        # plot the three axes
+        student = Student.objects.get(id=int(i))
+        ax.plot(label_set_transformed[i][:,0], label_set_transformed[i][:, 1], label_set_transformed[i][:, 2], 'o', markersize=8, alpha=0.5, label=student.full_name)
+    
+    plt.title("Embedding vector plot")
+    ax.legend()
+    ax.legend(loc='upper right')
 
-# def generate_pca_plot(image_embeddings, image_path):
-#     """
-#     Generate pca plot from a dictionary of lists
-#     """
-#     if not isinstance(image_embeddings, list):
-#         raise ValueError("Image embeddings must be a dictionary of lists")
-#     X = list()
-#     for embedding in image_embeddings.values():
-#         X.append(embedding)
-#     fig = plt.figure(figsize=(8,8))
-#     ax = fig.add_subplot(111, projection='3d')
-#     pca = PCA(n_components=len(image_embeddings)).fit(X)
-#     # transform the PCA
-#     for key, val in image_embeddings:
-#         transform = pca.transform(val)
-#         ax.plot(*transform, alpha=0.5, label=key)
-#     plt.title("Embedding vector")
-#     ax.legend(loc='upper-right')
-#     plt.savefig(image_path)
-        
+    if not os.path.exists(save_fig_path):
+        os.makedirs(os.path.dirname(save_fig_path))
+    plt.savefig(save_fig_path)
+
 
 def get_id_from_enc(encoding_list_tuple, encoding):
     """
@@ -52,9 +69,12 @@ def get_encodings(encoding_list):
     encoding = [i[0] for i in encoding_list]
     return encoding
 
-def get_hash(imagebytes):
+def get_hash(image):
     """
     Generate image hash for a value
     """
-    hashobj = hashlib.md5(imagebytes)
-    return hashobj.hexdigest()
+    import hashlib
+    
+    hashobj = hashlib.md5(image.read()).hexdigest()
+    print(hashobj)
+    return hashobj

@@ -185,6 +185,8 @@ else:
 ## AI global variables
 SVM_EMBEDDING_MAP = os.path.join(CACHE_PATH, 'cache', 'embedding-map.pkl')
 ENCODING_LIST = os.path.join(CACHE_PATH, 'cache', 'encoding-list.pkl')
+PATH_TO_EMBEDDING_DICT = os.path.join(CACHE_PATH, 'cache', 'path-to-embedding-dict.pkl')
+PCA_GRAPH = os.path.join(CACHE_PATH, 'images', 'pca-3d.png')
 
 TRAIN_DIR = os.path.join(MEDIA_PATH, 'images')
 CONFIDENCE = 0.3

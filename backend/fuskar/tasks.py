@@ -21,6 +21,27 @@ def get_boxes(frame):
     rgb_frame = frame[:, :, ::-1]
     return frame, face_recognition.face_locations(rgb_frame, model='cnn')
 
+
+@task()
+@lock_task('rm-image-objects')
+def remove_image_objects(image_instance):
+    """
+    Removes the hardcopy of an image and removes it from the cached resources
+    """
+    print(f"Received command to remove all cached instances of {image_instance.file.path}")
+    # remove it from path-to-embedding dict
+    if os.path.isfile(settings.PATH_TO_EMBEDDING_DICT):
+        with open(settings.PATH_TO_EMBEDDING_DICT, 'rb') as stream:
+                path_to_embed_dict = pickle.load(stream)
+        if image_instance.file.path in path_to_embed_dict.keys():
+            del path_to_embed_dict[image_instance.file.path]
+            print(f"Deleted Embeddings from Path to Embedding cache")
+        with open(settings.PATH_TO_EMBEDDING_DICT, 'wb') as stream:
+            pickle.dump(path_to_embed_dict, stream)
+    # retrain pkl to remove image from svm map and serial encodings
+    retrain_pkl()
+
+
 @task()
 @lock_task('retrain-pkl')
 def retrain_pkl():
@@ -35,6 +56,12 @@ def retrain_pkl():
     # Training directory
     train_dir = os.listdir(settings.TRAIN_DIR)
 
+    if os.path.exists(settings.PATH_TO_EMBEDDING_DICT):
+        with open(settings.PATH_TO_EMBEDDING_DICT, 'rb') as stream:
+            path_to_embed_dict = pickle.load(stream)
+    else:
+        path_to_embed_dict = dict()
+
     encoding_list_tuple = list()
     # Loop through each folder in the image directory
     for person in train_dir:
@@ -45,17 +72,27 @@ def retrain_pkl():
         for image in person_folder_listing:
             # Get the face encodings for the face in each image file
             image_path = os.path.join(person_folder, image)
-            face = face_recognition.load_image_file(image_path)
-            try:
-                boxes = face_recognition.face_locations(face, model='cnn')
-                face_enc = face_recognition.face_encodings(face, known_face_locations=boxes)[0]
-                # Add face encoding for current image with corresponding label (name) to the training data
-                encodings.append(face_enc)
+            if image_path in path_to_embed_dict.keys():
+                face_enc = path_to_embed_dict[image_path]
                 id_.append(person)
-                # create list of encodings tuples
+                encodings.append(face_enc)
                 encoding_list_tuple.append((list(face_enc), person))
-            except IndexError:
-                pass
+            else:
+                print(f"Image at {image_path} is not in cache, adding to path-to-embed-dict")
+                face = face_recognition.load_image_file(image_path)
+                boxes = face_recognition.face_locations(face, model='cnn')
+                try:
+                    face_enc = face_recognition.face_encodings(face, known_face_locations=boxes)[0]
+                    # Add face encoding for current image with corresponding label (name) to the training data
+                    encodings.append(face_enc)
+                    id_.append(person)
+                    # create list of encodings tuples
+                    encoding_list_tuple.append((list(face_enc), person))
+                    # add it to path-to-embed-dict
+                    path_to_embed_dict[image_path] = face_enc
+                except IndexError:
+                    pass
+    
     if len(train_dir) > 1:
         # Create and train the SVC classifier
         settings.USE_EMBEDDING = True
@@ -65,6 +102,9 @@ def retrain_pkl():
             print("Creating embedding map")
             pickle.dump(clf, output)
             print(f"Done creating embedding map at {settings.SVM_EMBEDDING_MAP}")
+        with open(settings.PATH_TO_EMBEDDING_DICT, 'wb') as stream:
+            pickle.dump(path_to_embed_dict, stream)
+            print(f"Done creating path-to-embed-dict at {settings.PATH_TO_EMBEDDING_DICT}")
     else:
         print("Cannot create SVM with one class, switching to encoding mode")
         settings.USE_EMBEDDING = False

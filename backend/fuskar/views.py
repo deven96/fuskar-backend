@@ -32,18 +32,22 @@ class ImageViewSet(viewsets.ModelViewSet):
         Override the default create function to check if the image has None
         or multiple faces
         """
-        hashvals = list()
-        for i in Image.objects.all():
-            hashvals.append(i.hashval)
         data = request.data.copy()
-        image = data['file']
+        try:
+            image = data['file']
+        except:
+            return Response(
+                {'detail': "No image sent"},
+                status=status.HTTP_406_NOT_ACCEPTABLE)
         face = face_recognition.load_image_file(image)
         face_bounding_boxes = face_recognition.face_locations(face, model='cnn')
         if len(face_bounding_boxes) == 1 :
             print("Image accepted as image contained only one face, checking uniqueness")
             # check image uniqueness
-            request._full_data['hashval'] = get_hash(image.read())
-            return super(ImageViewSet, self).create(request)
+            image = request.data.copy()['file']
+            hashval = get_hash(image)
+            request._full_data['hashval'] = hashval
+            return super(ImageViewSet, self).create(request, *args, **kwargs)
         else:
             return Response(
                 {'detail': "Image contains none or multiple faces"},

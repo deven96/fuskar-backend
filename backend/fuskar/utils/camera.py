@@ -7,7 +7,7 @@ import imutils
 import threading
 from django.conf import settings
 
-from fuskar.utils.nano import running_on_jetson_nano
+from fuskar.utils.nano import running_on_jetson_nano, get_jetson_gstreamer_source
 
 if settings.DEBUG:
     media_path = settings.MEDIA_ROOT
@@ -51,7 +51,7 @@ class VideoCamera(object):
         # Open a camera
         if running_on_jetson_nano():
             self.cap = cv2.VideoCapture(
-                # get_jetson_gstreamer_source(), 
+                get_jetson_gstreamer_source(),
                 cv2.CAP_GSTREAMER
             )
         else:
@@ -180,11 +180,13 @@ def get_frame():
     Retrieve a single frame from the camera
     """
     global video_camera
-
+    
     if video_camera == None:
         video_camera = VideoCamera()
     frame = video_camera.get_frame(ret_bytes=False, detect_face=False)
     print("Retrieving frame from camera as a picture [jpeg mode]")
+    del video_camera
+    video_camera = None
     return frame
 
 def stop_cam():

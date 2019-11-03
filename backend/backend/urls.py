@@ -32,7 +32,7 @@ urlpatterns = [
     path('video', views.get_stream),
     path('', include(router.urls)),
     path('admin/', admin.site.urls),
-    path('docs/', include_docs_urls(title='AssetMon API', authentication_classes=[], permission_classes=[]))
+    path('docs/', include_docs_urls(title='Fuskar API', authentication_classes=[], permission_classes=[]))
 ]
 
 if settings.DEBUG:
