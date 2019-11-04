@@ -33,7 +33,7 @@ def generate_pca_plot(save_fig_path, encoding_list_path):
     for i in label_set_dict:
         label_set_transformed[i] = pca.transform(label_set_dict[i])
     
-    fig = plt.figure(figsize=(8,8))
+    fig = plt.figure(figsize=(24,24))
     ax = fig.add_subplot(111, projection='3d')
     plt.rcParams['legend.fontsize'] = 10
     for i in label_set_transformed.keys():

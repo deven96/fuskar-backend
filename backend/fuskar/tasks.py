@@ -7,7 +7,7 @@ from huey.contrib.djhuey import periodic_task, task, lock_task, enqueue
 from django.conf import settings
 from fuskar.models import Lecture, Student
 from fuskar.utils.camera import get_frame
-from fuskar.utils.helpers import get_id_from_enc, get_encodings
+from fuskar.utils.helpers import get_id_from_enc, get_encodings, generate_pca_plot
 import face_recognition
 from sklearn import svm
 
@@ -92,6 +92,7 @@ def retrain_pkl():
                     path_to_embed_dict[image_path] = face_enc
                 except IndexError:
                     pass
+        
     
     if len(train_dir) > 1:
         # Create and train the SVC classifier
@@ -121,6 +122,7 @@ def test_attendance(lecture_instance_id):
     Begins taking attendance
     Once a Lecture object is created
     """
+    settings.USE_EMBEDDING = False
     if not Lecture.objects.get(id=lecture_instance_id).lock:
         print("##############################################################################")
         lecture_instance = Lecture.objects.get(id=lecture_instance_id)
@@ -187,6 +189,7 @@ def test_attendance(lecture_instance_id):
                         results = face_recognition.face_distance(encoding_list, i)
                         # get minimum face distance and compare
                         min_distance = min(results)
+                        print(min_distance)
                         index = list(results).index(min_distance)
                         if index:
                             encoding = encoding_list[index]

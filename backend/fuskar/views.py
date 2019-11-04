@@ -175,7 +175,7 @@ def get_stream(request):
     """
     Stream the video coming from connected camera
     """
-    Capturing.objects.get_or_create()
+    Capturing.objects.create()
     response = StreamingHttpResponse(video_stream(), content_type="multipart/x-mixed-replace;boundary=frame")
     if request.method == "GET":
         return response

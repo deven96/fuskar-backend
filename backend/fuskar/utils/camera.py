@@ -160,7 +160,10 @@ def video_stream(stop=False):
     global video_camera 
     global global_frame
 
-    if video_camera == None:
+    try:
+        if video_camera == None:
+            video_camera = VideoCamera()
+    except:
         video_camera = VideoCamera()
 
     # if not, send StreamHTTPResponse formated responses (in bytes)
