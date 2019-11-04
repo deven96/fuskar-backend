@@ -31,7 +31,6 @@ django-cors-headers==3.1.1
 django-rest-auth==0.9.5
 django-timezone-field==3.1
 djangorestframework==3.10.3
-dlib==19.17.0
 entrypoints==0.3
 face-recognition==1.2.3
 face-recognition-models==0.3.0

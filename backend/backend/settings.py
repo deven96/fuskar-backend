@@ -173,7 +173,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 CACHE_URL = '/.fuskar-cache/'
 CACHE_ROOT = os.path.join(BASE_DIR, '.fuskar-cache')
 
-USE_EMBEDDING = True
+USE_EMBEDDING = False
 
 if DEBUG:
     MEDIA_PATH = MEDIA_ROOT
@@ -189,4 +189,4 @@ PATH_TO_EMBEDDING_DICT = os.path.join(CACHE_PATH, 'cache', 'path-to-embedding-di
 PCA_GRAPH = os.path.join(CACHE_PATH, 'images', 'pca-3d.png')
 
 TRAIN_DIR = os.path.join(MEDIA_PATH, 'images')
-CONFIDENCE = 0.3
+CONFIDENCE = 0.5
