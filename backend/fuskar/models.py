@@ -62,3 +62,10 @@ class Image(models.Model):
 
     def __str__(self):
         return "Image object : {}".format(self.id)
+
+
+class Capturing(models.Model):
+    """
+    Controls the capture object
+    """
+    stop = models.BooleanField(default=False)

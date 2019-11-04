@@ -8,6 +8,7 @@ import threading
 from django.conf import settings
 
 from fuskar.utils.nano import running_on_jetson_nano, get_jetson_gstreamer_source
+from fuskar.models import Capturing
 
 if settings.DEBUG:
     media_path = settings.MEDIA_ROOT
@@ -18,6 +19,7 @@ else:
 
 video_camera = None
 global_frame = None
+stopped = False
 prototxtfile = os.path.join(cache_path, "cache", "deploy.prototxt")
 caffemodel = os.path.join(cache_path, "cache", "detect.caffemodel")
 video_path = os.path.join(media_path, 'video', 'video.avi')
@@ -151,7 +153,7 @@ class VideoCamera(object):
             self.recordingThread.stop()
 
 
-def video_stream():
+def video_stream(stop=False):
     """
     Yield each frame to create the effect of a realtime video
     """
@@ -163,7 +165,7 @@ def video_stream():
 
     # if not, send StreamHTTPResponse formated responses (in bytes)
     print("Retrieving frame from camera as a stream [bytes mode]")
-    while True:
+    while not Capturing.objects.last().stop:
         frame, _ = video_camera.get_frame()
         if frame != None:
             global_frame = frame
@@ -174,6 +176,8 @@ def video_stream():
             yield (b'--frame\r\n'
                     b'Access-Control-Allow-Origin: *\r\n'
                     b'Content-Type: image/jpeg\r\n\r\n' + global_frame + b'\r\n\r\n')
+    del video_camera
+    return True
 
 def get_frame():
     """

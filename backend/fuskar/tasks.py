@@ -169,6 +169,7 @@ def test_attendance(lecture_instance_id):
                 prediction_set = set({})
                 if len(embedding_list) > 0:
                     probability = list(clf.predict_proba(embedding_list))
+                    print(probability)
                     for i in probability:
                         highest_probability =  max(i)
                         if highest_probability > settings.CONFIDENCE:

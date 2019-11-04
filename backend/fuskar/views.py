@@ -6,7 +6,7 @@ from django.http import HttpResponseRedirect
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators import gzip
 from rest_framework import viewsets, status
-from fuskar.models import Student, Image, Course, Lecture
+from fuskar.models import Student, Image, Course, Lecture, Capturing
 from fuskar.utils.camera import video_stream
 from fuskar.utils.helpers import get_hash
 from fuskar.serializers import (
@@ -50,7 +50,7 @@ class ImageViewSet(viewsets.ModelViewSet):
             return super(ImageViewSet, self).create(request, *args, **kwargs)
         else:
             return Response(
-                {'detail': "Image contains none or multiple faces"},
+                {'detail': "Image contains no recognizable face or multiple faces"},
                 status=status.HTTP_406_NOT_ACCEPTABLE)
 
 class CourseViewSet(viewsets.ModelViewSet):
@@ -170,10 +170,21 @@ class LectureViewSet(viewsets.ModelViewSet):
 
 
 @gzip.gzip_page
-@api_view(['get'])
+@api_view(['get', 'post'])
 def get_stream(request):
     """
     Stream the video coming from connected camera
     """
+    Capturing.objects.get_or_create()
     response = StreamingHttpResponse(video_stream(), content_type="multipart/x-mixed-replace;boundary=frame")
-    return response
+    if request.method == "GET":
+        return response
+    elif request.method == "POST":
+        capturing = Capturing.objects.last()
+        capturing.stop = True
+        capturing.save()
+        response.close()
+        return Response(
+                    {"detail": "Stopped video stream"},
+                    status=status.HTTP_202_ACCEPTED
+                )
