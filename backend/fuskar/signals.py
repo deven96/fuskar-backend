@@ -37,15 +37,16 @@ def retrain_embedding_on_image_save(sender, instance, **kwargs):
 
 
 @receiver(models.signals.post_save, sender=Lecture)
-def take_attendance_on_lecture_create(sender, instance, **kwargs):
+def take_attendance_and_emotions_on_lecture_create(sender, instance, **kwargs):
     """
-    Begins taking attendance
+    Begins taking attendance and emotions
     Once a Lecture object is created
     """
     test_attendance(instance.id)
 
 
 @receiver(models.signals.m2m_changed, sender=Lecture.students_present.through)
+@receiver(models.signals.m2m_changed, sender=Lecture.emotions.through)
 @receiver(models.signals.post_save, sender=Lecture)
 def trigger_ws_serialization(sender, instance, **kwargs):
     """

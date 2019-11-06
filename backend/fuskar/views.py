@@ -6,7 +6,7 @@ from django.http import HttpResponseRedirect
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators import gzip
 from rest_framework import viewsets, status
-from fuskar.models import Student, Image, Course, Lecture, Capturing
+from fuskar.models import Student, Image, Course, Lecture, Capturing, Emotion
 from fuskar.utils.camera import video_stream
 from fuskar.utils.helpers import get_hash
 from fuskar.serializers import (
@@ -15,7 +15,9 @@ from fuskar.serializers import (
                         CourseSerializer, 
                         StudentCourseSerializer, 
                         LectureSerializer, 
-                        CourseLectureSerializer
+                        CourseLectureSerializer,
+                        CourseEmotionSerializer,
+                        EmotionSerializer,
 )
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
@@ -53,6 +55,13 @@ class ImageViewSet(viewsets.ModelViewSet):
                 {'detail': "Image contains no recognizable face or multiple faces"},
                 status=status.HTTP_406_NOT_ACCEPTABLE)
 
+class EmotionViewSet(viewsets.ModelViewSet):
+    """
+    Viewset for handling emotion queries 
+    """
+    serializer_class = EmotionSerializer
+    queryset = Emotion.objects.all()
+
 class CourseViewSet(viewsets.ModelViewSet):
     """
    Viewset for handling course queries 
@@ -60,6 +69,8 @@ class CourseViewSet(viewsets.ModelViewSet):
     serializer_class = CourseSerializer
     queryset = Course.objects.all()
     lecture_serializer = CourseLectureSerializer
+    emotion_serializer = CourseEmotionSerializer
+
 
     @action(detail=True, methods=['get'])
     def lectures(self, request, pk=None):
@@ -71,8 +82,17 @@ class CourseViewSet(viewsets.ModelViewSet):
         queryset = course.lecture_set
         serializer = self.lecture_serializer(queryset.all(), many=True)
         return Response(serializer.data)
-
-
+    
+    @action(detail=True, methods=['get'])
+    def emotions(self, request, pk=None):
+        """
+        Returns all emotions for a particular course
+        """
+        course = Course.objects.get(id=pk)
+        # get all lectures for that course
+        queryset = course.lecture_set
+        serializer = self.emotion_serializer(queryset.all(), many=True)
+        return Response(serializer.data)
 
 class StudentViewSet(viewsets.ModelViewSet):
     """
@@ -136,10 +156,11 @@ class StudentViewSet(viewsets.ModelViewSet):
 
 class LectureViewSet(viewsets.ModelViewSet):
     """
-   Viewset for handling course queries 
+   Viewset for handling lecture queries 
     """
     serializer_class = LectureSerializer
     queryset = Lecture.objects.all()
+    emotion_serializer = EmotionSerializer
 
 
     @action(detail=True, methods=['post'])

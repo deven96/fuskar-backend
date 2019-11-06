@@ -189,4 +189,6 @@ PATH_TO_EMBEDDING_DICT = os.path.join(CACHE_PATH, 'cache', 'path-to-embedding-di
 PCA_GRAPH = os.path.join(CACHE_PATH, 'images', 'pca-3d.png')
 
 TRAIN_DIR = os.path.join(MEDIA_PATH, 'images')
-CONFIDENCE = 0.5
+CONFIDENCE = 0.62
+TARGET_EMOTIONS = ['surprise', 'calm', 'anger', 'fear']
+ADJACENT_THRESHOLD = 10

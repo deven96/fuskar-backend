@@ -41,6 +41,14 @@ class Course(models.Model):
     class Meta:
         unique_together = [['department', 'code']]
 
+class Emotion(models.Model):
+    EMOTION_CHOICES = (
+        ("calm", "calm"),
+        ("anger", "anger"),
+        ("happiness", "happiness"),
+    )
+    emotion = models.CharField(max_length=15, choices=EMOTION_CHOICES)
+
 class Lecture(models.Model):
     """
     Every lecture belongs to a course and contains a list of students in attendance
@@ -49,6 +57,7 @@ class Lecture(models.Model):
     started_at = models.DateTimeField(auto_now_add=True)
     stopped_at = models.DateTimeField(blank=True, null=True)
     students_present = models.ManyToManyField(Student, blank=True)
+    emotions = models.ManyToManyField(Emotion, blank=True)
     lock = models.BooleanField(default=False)
 
 class Image(models.Model):

@@ -1,11 +1,15 @@
 from __future__ import absolute_import
 import os
-import pickle
+import cv2
 import time
+import pickle
+import numpy as np
 from huey import crontab
-from huey.contrib.djhuey import periodic_task, task, lock_task, enqueue
 from django.conf import settings
-from fuskar.models import Lecture, Student
+from django.db.utils import OperationalError
+from EmoPy.src.fermodel import FERModel
+from huey.contrib.djhuey import periodic_task, task, lock_task, enqueue
+from fuskar.models import Lecture, Student, Emotion
 from fuskar.utils.camera import get_frame
 from fuskar.utils.helpers import get_id_from_enc, get_encodings, generate_pca_plot
 import face_recognition
@@ -21,6 +25,32 @@ def get_boxes(frame):
     rgb_frame = frame[:, :, ::-1]
     return frame, face_recognition.face_locations(rgb_frame, model='cnn')
 
+def predict_emotions(model, image, lecture_instance):
+    """
+    Predict the emotions and add to lecture object
+    """
+    # get difference of the highest member of the list
+    maxdiff = lambda lst: [(max(lst) - lst[i])<=settings.ADJACENT_THRESHOLD for i in range(0,len(lst)-1)]
+    gray_image = image
+    if len(image.shape) > 2:
+        gray_image = cv2.cvtColor(image, code=cv2.COLOR_BGR2GRAY)
+    resized_image = cv2.resize(gray_image, model.target_dimensions, interpolation=cv2.INTER_LINEAR)
+    final_image = np.array([np.array([resized_image]).reshape(list(model.target_dimensions)+[model.channels])])
+    prediction = model.model.predict(final_image)
+    # normalized_prediction = [x/sum(prediction) for x in prediction]
+    prediction = list(prediction[0])
+    print(prediction)
+    emotions = list()
+    a = maxdiff(prediction)
+    for index, val in enumerate(a):
+        if val:
+            emotions.append(settings.TARGET_EMOTIONS[index])
+
+    print(f"Emotion(s) ==> {emotions}")
+    if not lecture_instance.lock:
+        for emotion_detected in emotions:
+            emotion = Emotion.objects.create(emotion=emotion_detected)
+            lecture_instance.emotions.add(emotion)
 
 @task()
 @lock_task('rm-image-objects')
@@ -121,9 +151,11 @@ def test_attendance(lecture_instance_id):
     Begins taking attendance
     Once a Lecture object is created
     """
+    global stopped
     if not Lecture.objects.get(id=lecture_instance_id).lock:
         print("##############################################################################")
         lecture_instance = Lecture.objects.get(id=lecture_instance_id)
+        model = FERModel(settings.TARGET_EMOTIONS, verbose=False)
         lecture_processing_time_start = time.time()
         frame_index = 0
 
@@ -160,6 +192,16 @@ def test_attendance(lecture_instance_id):
             no = len(boxes)
             print(f"Frame [{frame_index}]: {no} face(s) detected")
             
+            # Predict emotions
+            for i in range(no):
+                print(f"Predicting emotions for Face [{i+1}]")
+                box = boxes[i]
+                y_start = box[1]
+                y_end = y_start + box[3]
+                x_start = box[0]
+                x_end = x_start + box[2]
+                predict_emotions(model, frame[y_start:y_end, x_start:x_end], lecture_instance)
+
             # Get the embeddings of every face in the image
             embedding_list = [x for x in face_recognition.face_encodings(frame, known_face_locations=boxes)]
             # prediction output is a list of id 
@@ -186,6 +228,7 @@ def test_attendance(lecture_instance_id):
                     for i in embedding_list:
                         results = face_recognition.face_distance(encoding_list, i)
                         # get minimum face distance and compare
+                        # TODO: create a voting system like KNN to increase performance
                         min_distance = min(results)
                         index = list(results).index(min_distance)
                         if index:
@@ -197,7 +240,7 @@ def test_attendance(lecture_instance_id):
                             else:
                                 print(f"Highest prob {round(highest_probability, 4)} is lower/equal confidence value {settings.CONFIDENCE}")
             for i in _id:
-                if int(i) in registered_student_ids:
+                if int(i) in registered_student_ids and not lecture_instance.lock:
                     # check lecture lock incase processing was occuring when lecture was stopped so as not to add 
                     # student after stopped_at
                     student = Student.objects.get(id=int(i))
@@ -210,7 +253,9 @@ def test_attendance(lecture_instance_id):
             print(f"Id's discovered in this iteration {_id}")
             print(f"Single frame processing ran in {round(time.time() - loop_processing_time_start, 1)} seconds")
             time.sleep(2)
+        stopped = True
         stop_lecture_time = time.time()
         print(f"Lecture {lecture_instance.course.name}-{lecture_instance.id} was stopped, exiting attendance, {frame_index} frame(s) processed")
         print(f"Lecture {lecture_instance.course.name}-{lecture_instance.id} attendance taking process ran for {round(stop_lecture_time - lecture_processing_time_start, 1)} seconds")
         print("##############################################################################")
+

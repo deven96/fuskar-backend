@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from fuskar.models import Image, Student, Course, Lecture
+from fuskar.models import Image, Student, Course, Lecture, Emotion
 
 
 class ImageSerializer(serializers.ModelSerializer):
@@ -7,6 +7,10 @@ class ImageSerializer(serializers.ModelSerializer):
         model = Image
         fields = '__all__'
 
+class EmotionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Emotion
+        fields = "__all__"
 
 class StudentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -28,7 +32,22 @@ class CourseLectureSerializer(serializers.ModelSerializer):
         model = Lecture
         exclude = ['course', 'lock']
 
+class CourseEmotionSerializer(serializers.ModelSerializer):
+    emotions = serializers.SlugRelatedField(
+        many=True,
+        read_only=True,
+        slug_field='emotion'
+    )
+    class Meta:
+        model = Lecture
+        fields = ['emotions', ]
+
 class LectureSerializer(serializers.ModelSerializer):
+    emotions = serializers.SlugRelatedField(
+        many=True,
+        read_only=True,
+        slug_field='emotion'
+    )
     class Meta:
         model = Lecture
         exclude = ['lock', ]
