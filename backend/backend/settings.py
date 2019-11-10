@@ -173,7 +173,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 CACHE_URL = '/.fuskar-cache/'
 CACHE_ROOT = os.path.join(BASE_DIR, '.fuskar-cache')
 
-USE_EMBEDDING = False
 
 if DEBUG:
     MEDIA_PATH = MEDIA_ROOT
@@ -183,12 +182,25 @@ else:
     CACHE_PATH = CACHE_URL
 
 ## AI global variables
-SVM_EMBEDDING_MAP = os.path.join(CACHE_PATH, 'cache', 'embedding-map.pkl')
+
+PREDICTION_MODES = [
+    "knn",
+    "svm",
+    "direct-euclid"
+]
+
+PREDICTION_MODE = PREDICTION_MODES[0]
+
+SVM_EMBEDDING_MAP = os.path.join(CACHE_PATH, 'cache', 'svm-embedding-map.pkl')
+KNN_EMBEDDING_MAP = os.path.join(CACHE_PATH, 'cache', 'knn-embedding-map.pkl')
 ENCODING_LIST = os.path.join(CACHE_PATH, 'cache', 'encoding-list.pkl')
 PATH_TO_EMBEDDING_DICT = os.path.join(CACHE_PATH, 'cache', 'path-to-embedding-dict.pkl')
 PCA_GRAPH = os.path.join(CACHE_PATH, 'images', 'pca-3d.png')
 
 TRAIN_DIR = os.path.join(MEDIA_PATH, 'images')
-CONFIDENCE = 0.62
+# Confidence level. Higher is stricter. 
+# Inverse of distance, where higher is looser
+CONFIDENCE = 0.50
+DISTANCE = 1 - CONFIDENCE
 TARGET_EMOTIONS = ['surprise', 'calm', 'anger', 'fear']
-ADJACENT_THRESHOLD = 10
+ADJACENT_THRESHOLD = 20
