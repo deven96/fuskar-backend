@@ -14,7 +14,7 @@ echo "Creating new user...\n"
 sudo adduser "$user"
 
 echo "Installing aptitude packages...\n"
-sudo apt install redis redis-server postgres nginx
+sudo apt install redis redis-server postgres nginx nodejs npm
 
 echo "Installing virtualenvwrapper"
 sudo python3 -H virtualenvwrapper
@@ -53,3 +53,13 @@ echo "Copying nginx config "$nginx_conf" to sites-available"
 sudo cp "$nginx_conf" "$sites_available"
 
 # TODO: start up all services and check statuses
+# enable redis-server service
+sudo systemctl enable redis-server.service
+# enable huey-service
+sudo systemctl enable fuskar-huey-composer.service
+# enable backend service
+sudo systemctl enable fuskar-backend.service
+# enable frontend service
+sudo systemctl enable fuskar-frontend.service
+# enable nginx service
+sudo systemctl enable nginx.service

@@ -1,13 +1,14 @@
 [Unit]
 Description=Huey Instance for Fuskar
-After=network.target
+After=redis-server.service
 
 [Service]
 User=fuskar-owner
 Group=www-data
-WorkingDirectory=/home/fuskar-owner/Projects/fuskar/backend
+WorkingDirectory=/home/fuskar-owner/Projects/fuskar/back-end/backend/
 Environment="PATH=/home/fuskar-owner/envs/fuskar/bin"
 ExecStart=/home/fuskar-owner/envs/fuskar/bin/python manage.py run_huey
+Restart=always
 
 [Install]
 WantedBy=multi-user.target

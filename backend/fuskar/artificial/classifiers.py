@@ -91,7 +91,7 @@ class KNN:
         if not n_neighbors:
             n_neighbors = int(round(math.sqrt(len(X))))
             if verbose:
-                print(f"Chose n_neighbors automatically: {n_neighbors}")
+                print(f"Chose n_neighbors of {n_neighbors} automatically for dataset of size {len(X)}")
 
         # Create and train the KNN classifier
         knn_clf = neighbors.KNeighborsClassifier(n_neighbors=n_neighbors, algorithm=knn_algo, weights='distance')

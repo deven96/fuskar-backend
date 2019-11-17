@@ -1,13 +1,14 @@
 [Unit]
 Description=Django Instance for Fuskar
-After=network.target
+After=fuskar-huey-composer.service
 
 [Service]
 User=fuskar-owner
 Group=www-data
-WorkingDirectory=/home/fuskar-owner/Projects/fuskar/backend
+WorkingDirectory=/home/fuskar-owner/Projects/fuskar/back-end/backend/
 Environment="PATH=/home/fuskar-owner/envs/fuskar/bin"
 ExecStart=/home/fuskar-owner/envs/fuskar/bin/daphne -b 0.0.0.0 -p 8000 backend.routing:application
+Restart=always
 
 [Install]
 WantedBy=multi-user.target

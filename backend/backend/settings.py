@@ -200,7 +200,7 @@ PCA_GRAPH = os.path.join(CACHE_PATH, 'images', 'pca-3d.png')
 TRAIN_DIR = os.path.join(MEDIA_PATH, 'images')
 # Confidence level. Higher is stricter. 
 # Inverse of distance, where higher is looser
-CONFIDENCE = 0.50
+CONFIDENCE = 0.59
 DISTANCE = 1 - CONFIDENCE
 TARGET_EMOTIONS = ['surprise', 'calm', 'anger', 'fear']
 ADJACENT_THRESHOLD = 20

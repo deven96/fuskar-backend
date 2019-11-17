@@ -75,23 +75,21 @@ For detailed explanation on how things work, check out [Nuxt.js docs](https://nu
 
     - [ ] Auto Switch camera to read from jetson nano streamer
 
-    - [ ] Create Gunicorn service file
+    - [x] Create Daphne service file
 
     - [ ] Create Redis-server  broker service file
 
-    - [ ] Create Celery service file
+    - [x] Make sure to start Huey service before Daphne service
 
-    - [ ] Make sure to start django server before Huey server
-
-    - [ ] Tie Huey service restart to restart Celery service
+    - [x] Tie Huey service start to start Celery service
 
 - Front-end (Vue) application
 
-    - [ ] Create Vue service file
+    - [x] Create Vue service file
 
-    - [ ] Connect to back-end port
+    - [x] Connect to back-end port
 
-    - [ ] Crop whitespace out of captured image
+    - [x] Crop whitespace out of captured image
 
-    - [ ] Create Vue server service file to run on start, depending on django service file
+    - [x] Create Vue server service file to run on start, depending on django service file
 
