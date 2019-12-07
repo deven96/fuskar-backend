@@ -97,6 +97,7 @@ def retrain_pkl():
     
     if len(train_dir) > 1:
         # Create and train the classifiers
+        settings.PREDICTION_MODE = "knn"
         cf.SVM.train(X=encodings, Y=id_, pickle_path=settings.SVM_EMBEDDING_MAP)
         cf.KNN.train(X=encodings, Y=id_, pickle_path=settings.KNN_EMBEDDING_MAP)
     else:
