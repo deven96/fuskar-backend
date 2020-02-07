@@ -52,6 +52,18 @@ $ yarn generate
 
 For detailed explanation on how things work, check out [Nuxt.js docs](https://nuxtjs.org).
 
+## Usage
+
+- Turn on the device shown below
+
+![device](assets/view.jpeg)
+![device](assets/view1.jpeg)
+
+- Use a laptop or phone to connect the device to the device hotspot with the password 'fuskar-owner'
+- Visit the web application on 10.42.0.1
+
+![webapplication](assets/webapp1.png)
+![webapplication](assets/webapp2.png)
 
 ### Deploy Plans
 
