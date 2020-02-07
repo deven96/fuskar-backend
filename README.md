@@ -3,6 +3,8 @@
 This is a facial recognition application built to be deployed on an NVIDIA Jetson Nano
 It combines the similarity comparison of the FaceNet Model trained on a Siamese network into a django API served to a VueJS frontend
 
+![Demo](assets/animate.gif)
+
 ## Development
 
 ### Backend
@@ -52,6 +54,18 @@ $ yarn generate
 
 For detailed explanation on how things work, check out [Nuxt.js docs](https://nuxtjs.org).
 
+## Usage
+
+- Turn on the device shown below
+
+![device](assets/view.jpeg)
+![device](assets/view1.jpeg)
+
+- Use a laptop or phone to connect the device to the device hotspot with the password 'fuskar-owner'
+- Visit the web application on 10.42.0.1
+
+![webapplication](assets/webapp1.png)
+![webapplication](assets/webapp2.png)
 
 ### Deploy Plans
 
