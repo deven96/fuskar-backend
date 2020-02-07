@@ -3,8 +3,6 @@
 This is a facial recognition application built to be deployed on an NVIDIA Jetson Nano
 It combines the similarity comparison of the FaceNet Model trained on a Siamese network into a django API served to a VueJS frontend
 
-![Demo](assets/animate.gif)
-
 ## Development
 
 ### Backend
