@@ -152,19 +152,38 @@ class VideoCamera(object):
         if self.recordingThread != None:
             self.recordingThread.stop()
 
-
-def video_stream(stop=False):
+def start_cam():
     """
-    Yield each frame to create the effect of a realtime video
+    Get a global camera object thread
     """
-    global video_camera 
-    global global_frame
+    global video_camera
 
     try:
         if video_camera == None:
             video_camera = VideoCamera()
     except:
         video_camera = VideoCamera()
+    return video_camera
+
+def stop_cam():
+    """
+    Stop global camera object thread
+    """
+    global video_camera
+
+    if video_camera:
+        video_camera.stop_record()
+        del video_camera
+        video_camera = None
+
+
+def video_stream(stop=False):
+    """
+    Yield each frame to create the effect of a realtime video
+    """
+    global global_frame
+
+    video_camera = start_cam()
 
     # if not, send StreamHTTPResponse formated responses (in bytes)
     print("Retrieving frame from camera as a stream [bytes mode]")
@@ -179,28 +198,16 @@ def video_stream(stop=False):
             yield (b'--frame\r\n'
                     b'Access-Control-Allow-Origin: *\r\n'
                     b'Content-Type: image/jpeg\r\n\r\n' + global_frame + b'\r\n\r\n')
-    del video_camera
+    stop_cam()
     return True
 
 def get_frame():
     """
     Retrieve a single frame from the camera
     """
-    global video_camera
-    
-    if video_camera == None:
-        video_camera = VideoCamera()
+    video_camera = start_cam()
     frame = video_camera.get_frame(ret_bytes=False, detect_face=False)
     print("Retrieving frame from camera as a picture [jpeg mode]")
-    del video_camera
-    video_camera = None
+    stop_cam()
     return frame
 
-def stop_cam():
-    """
-    Stop global camera object thread
-    """
-    global video_camera
-
-    if video_camera:
-        video_camera.stop_record()
