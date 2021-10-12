@@ -81,7 +81,7 @@ networkx==2.3
 notebook==6.0.1
 # numpy==1.14.5
 oauthlib==3.1.0
-opencv-python==4.1.0.25
+opencv-python==4.1.1.26
 packaging==19.2
 pandas==0.25.1
 pandocfilters==1.4.2
